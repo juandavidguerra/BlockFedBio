@@ -18,10 +18,10 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 plt.ion() 
 
 #Inputs
-batch_size=32
-num_workers=4
-n_classes=10
-num_epochs=50
+batch_size=64
+num_workers=8
+num_classes=10
+num_epochs=5
 lr=0.001
 momentum=0.9
 step_size=7
@@ -34,7 +34,7 @@ data_transforms = {
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]),
     'val': transforms.Compose([
-        transforms.Resize(256),
+        transforms.Resize(224),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]),}
@@ -90,25 +90,34 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=num_epochs):
     model.load_state_dict(best_model_wts) # load best model weights
     return model
 
-model_ft = models.resnet50(pretrained=True) #pretrained=False
-num_ftrs = model_ft.fc.in_features
-model_ft.fc = nn.Linear(num_ftrs, n_classes)
-model_ft.fc.reset_parameters()
+def set_parameter_requires_grad(model, feature_extracting):
+    if feature_extracting:
+        for param in model.parameters():
+            param.requires_grad = False
+
+def initialize_model(model_name, num_classes, feature_extract, use_pretrained):
+    model_ft = None
+    print(model_name)
+    if model_name == "resnet50":
+        model_ft = models.resnet50(pretrained=use_pretrained)
+        set_parameter_requires_grad(model_ft, feature_extract)
+        num_ftrs = model_ft.fc.in_features
+        model_ft.fc = nn.Linear(num_ftrs, num_classes)
+    elif model_name == "vgg19":
+        model_ft = models.vgg19(pretrained=use_pretrained)
+        set_parameter_requires_grad(model_ft, feature_extract)
+        num_ftrs = model_ft.classifier[6].in_features
+        model_ft.classifier[6] = nn.Linear(num_ftrs,num_classes)
+    else:
+        print("Invalid model name, exiting...")
+        exit()
+    return model_ft
+
+model_ft = initialize_model(model_name='vgg19', num_classes=num_classes, feature_extract=False, use_pretrained=True)
 model_ft = model_ft.to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer_ft = optim.SGD(model_ft.parameters(), lr=lr, momentum=momentum) # Observe that all parameters are being optimized
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=step_size, gamma=gamma) # Decay LR by a factor of 0.1 every 7 epochs
-
 model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=num_epochs)
 
 
-model_conv = torchvision.models.resnet50(pretrained=True)
-for param in model_conv.parameters():
-    param.requires_grad = False
-num_ftrs = model_conv.fc.in_features
-model_conv.fc = nn.Linear(num_ftrs, n_classes)
-model_conv = model_conv.to(device)
-optimizer_conv = optim.SGD(model_conv.fc.parameters(), lr=lr, momentum=momentum)
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer_conv, step_size=step_size, gamma=gamma)
-
-model_conv = train_model(model_conv, criterion, optimizer_conv,exp_lr_scheduler, num_epochs=num_epochs)
