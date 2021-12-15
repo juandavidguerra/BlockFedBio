@@ -1,0 +1,9 @@
+matplotlib
+pandas
+psutil
+tqdm
+scipy
+flask
+requests
+sklearn
+
