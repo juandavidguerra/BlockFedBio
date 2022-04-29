@@ -8,6 +8,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import transforms, datasets, models
 
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter('./runs/')
+
 ### configuration
 
 torch.backends.cudnn.benchmark=True
@@ -16,14 +19,14 @@ os.environ['CUDA_LAUNCH_BLOCKING']='1'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 ### architecture
-model_name = 'resnet50'# vgg19 or resnet50
-dataset= 'CelebA-10' # CelebA-10 or VGG-Face2-10
+model_name = 'mobilenet_v2'# vgg19 or resnet50 mobilenet_v2
+dataset= 'VGG-Face2-10' # CelebA-10 or VGG-Face2-10
 
 ### inputs
 batch_size=64
 num_workers=8
 num_classes=10
-num_epochs=2
+num_epochs=100
 lr=0.001
 momentum=0.9
 step_size=7
@@ -33,7 +36,7 @@ dataroot = '/home/juan/Documents/datasets/'
 ### fed inputs
 num_clients = 4
 num_selected = 2
-num_rounds = 20
+num_rounds = 10
 
 ### transform
 transform_train = transforms.Compose([
@@ -90,6 +93,8 @@ def test(global_model, test_loader):
             correct += pred.eq(target.view_as(pred)).sum().item()
     test_loss /= len(test_loader.dataset)
     acc = correct / len(test_loader.dataset)
+    writer.add_scalar('Acc',acc, num_epochs)
+    writer.add_scalar('Loss', test_loss, num_epochs)
     return test_loss, acc
 
 ### agregate function
@@ -124,6 +129,11 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained):
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier[6].in_features
         model_ft.classifier[6] = nn.Linear(num_ftrs,num_classes)
+    elif model_name == "mobilenet_v2":
+        model_ft = models.mobilenet_v2(pretrained=use_pretrained)
+        set_parameter_requires_grad(model_ft, feature_extract)
+        num_ftrs = model_ft.classifier[1].in_features
+        model_ft.classifier[1] = nn.Linear(num_ftrs,num_classes)
     else:
         print("Invalid model name, exiting...")
         exit()
@@ -155,5 +165,7 @@ for r in range(num_rounds):
     test_loss, acc = test(global_model, test_loader)
     losses_test.append(test_loss)
     acc_test.append(acc)
+    #writer.add_scalar('Acc Server',acc_test, num_rounds)
+    #writer.add_scalar('Loss Server', losses_test, num_rounds)
     print('%d-th round' % r)
     print('average train loss %0.3g | test loss %0.3g | test acc: %0.3f' % (loss / num_selected, test_loss, acc))
