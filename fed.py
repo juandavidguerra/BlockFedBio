@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import transforms, datasets, models
+#from blockchain import bl2 as bl
 
 from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter('./runs/')
@@ -162,6 +163,11 @@ for r in range(num_rounds):
         loss += client_update(client_models[i], opt[i], train_loader[client_idx[i]], epoch=num_epochs)    
     losses_train.append(loss)
     server_aggregate(global_model, client_models)
+
+    ###call blockchain script flask and ask for mininig
+    ###
+
+
     test_loss, acc = test(global_model, test_loader)
     losses_test.append(test_loss)
     acc_test.append(acc)

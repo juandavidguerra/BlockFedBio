@@ -6,4 +6,5 @@ scipy
 flask
 requests
 sklearn
+pytorch
 

@@ -1,0 +1,5 @@
+Omisola, secret
+Funmilayo, mypassword
+olufunmi, mypassword
+juan, juandavid
+juanandres, b'$2b$12$tArpb23CQRR1Mnsh14IG9OkkQZ5o0/AcbQVzhEQGo2Bc/XdA.oiSC'

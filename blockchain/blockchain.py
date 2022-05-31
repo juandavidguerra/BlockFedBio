@@ -1,26 +1,19 @@
-# Importing modules
-
 import datetime      # To keep track of time, as each block has its own timestamp (exact date and time at which the block is created)
 import json         # For encoding the blocks before hashing them
 import hashlib      # For finding hashes for the blocks
 from flask import Flask, jsonify      # For creating a web application interface
+from uuid import uuid4
 
-# Building the blockchain architecture
 
 class Blockchain:
 
-    def __init__(self):
-        
-        # List of chains (to cryptographically link the blocks)
-        self.chain = []
-        
-        # Creating the Genesis Block
+    def __init__(self): 
+        self.chain = []        
         self.createblock(proof = 1, prevhash = "0")
+        #self.nodes = set()
 
-    def createblock(self, proof, prevhash):
-        
-        # Defining the structure of our block
-        block = {'index': len(self.chain) + 1,
+    def createblock(self, proof, prevhash):    
+        block = {'index': len(self.chain) + 1,  # Defining the structure of our block
                  'timestamp': str(datetime.datetime.now()),
                  'proof': proof,
                  'prevhash': prevhash}
@@ -73,21 +66,14 @@ class Blockchain:
             
             if op[:5] != "00000":
                 return True
-
             prevblock = currentblock
             blockindex += 1
-
         return True
 
 
-
-# Building a Flask based Web App for interacting with the blockchain
-app = Flask(__name__)
-
-
-# Creating a blockchain based on architecture defined
-blockchain = Blockchain()
-
+app = Flask(__name__) # Building a Flask based Web App for interacting with the blockchain
+blockchain = Blockchain() # Creating a blockchain based on architecture defined
+#node_identifier = str(uuid4()).replace('-', '') # HIT
 
 # Welcome page
 @app.route('/', methods=['GET'])
@@ -97,7 +83,7 @@ def welcome():
         <html>
         <head><title>Spyder</title></head>
         <body>
-        <h1>Spyder Blockchain</h1>
+        <h1>Blockchain</h1>
         Welcome to our Blockchain Page
         <br>Lets Go !!!
         <br>
@@ -132,6 +118,9 @@ def mineblock():
                 'prevhash': block['prevhash']}
 
     return jsonify(response), 200
+
+
+    
 
 
 # Gwtting the full blockchain displayed in Postman

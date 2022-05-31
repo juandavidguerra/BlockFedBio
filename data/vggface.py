@@ -3,26 +3,20 @@ import csv
 import glob
 import os
 import time
-
 import multitasking
 import pandas as pd
-
 
 def reset_csv():
     with open('multitasking.csv', 'w') as f:
         f.write('id,name,ext\n')
 
-
 reset_csv()
 state = 0
-
-
 def write_csv(file, newrow):
     with open(file, mode='a') as f:
         f_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         f_writer.writerow(newrow)
-
-
+        
 def format_data(filename):
     df = pd.read_csv('multitasking.csv')
     df = df.sort_values(by=['name', 'id']).reset_index(drop=True)
